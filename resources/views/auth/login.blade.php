@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Login Guru — Tes Olahraga Siswa</title>
+    <title>Login Guru — TKS (Tes Kebugaran Siswa)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <!-- Google Fonts -->
@@ -33,7 +33,6 @@
             overflow-x: hidden;
         }
 
-        /* Dynamic background glow effect */
         .field-bg {
             position: fixed;
             top: 0;
@@ -59,26 +58,29 @@
             max-width: 420px;
         }
 
-        /* Brand / Stopwatch Header Icon */
         .brand-icon-wrapper {
             display: flex;
             justify-content: center;
             margin-bottom: 24px;
         }
 
-        .stopwatch-icon {
-            width: 64px;
-            height: 64px;
-            background: var(--accent-green);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 24px var(--accent-green-glow);
-            color: #090d16;
-        }
+      .login-logo {
+    width: 180px;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 0 22px var(--accent-green-glow));
+}
 
-        /* Glass Card */
+.login-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: brightness(0) invert(1)
+            drop-shadow(0 0 10px rgba(16,185,129,.45));
+}
+
         .glass-card {
             background: var(--glass-bg);
             backdrop-filter: blur(16px);
@@ -115,7 +117,6 @@
             margin: 0 0 28px 0;
         }
 
-        /* Alerts */
         .alert-error {
             background: rgba(239, 68, 68, 0.12);
             border: 1px solid rgba(239, 68, 68, 0.3);
@@ -127,7 +128,6 @@
             text-align: center;
         }
 
-        /* Form Fields */
         .field {
             margin-bottom: 20px;
         }
@@ -162,7 +162,6 @@
             background: rgba(0, 0, 0, 0.4);
         }
 
-        /* Password Wrapper & Toggle */
         .field-password-wrap {
             position: relative;
             display: flex;
@@ -203,7 +202,6 @@
             display: block;
         }
 
-        /* Checkbox */
         .checkbox-group {
             display: flex;
             align-items: center;
@@ -227,7 +225,6 @@
             user-select: none;
         }
 
-        /* Button Primary */
         .btn-primary {
             width: 100%;
             background: var(--accent-green);
@@ -259,30 +256,62 @@
             font-size: 13px;
             margin-top: 24px;
         }
+
+        .dev-watermark {
+            position: fixed;
+            bottom: 14px;
+            right: 18px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--text-faint);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
+            padding: 6px 12px;
+            border-radius: 999px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 10;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        .dev-watermark span {
+            color: var(--accent-green);
+        }
+
+        .footer-credit {
+            text-align: center;
+            color: var(--text-faint);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-top: 8px;
+            opacity: 0.7;
+        }
+
+        .footer-credit span {
+            color: var(--accent-green);
+        }
     </style>
 </head>
 <body>
     <div class="field-bg"></div>
 
+    <div class="dev-watermark">BY <span>IQI_PJOK</span></div>
+
     <div class="login-wrapper">
         <div class="login-container">
 
-            <!-- Logo Header -->
             <div class="brand-icon-wrapper">
-                <div class="stopwatch-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="13" r="8"></circle>
-                        <path d="M12 9v4l2.5 2.5"></path>
-                        <path d="M9 2h6"></path>
-                        <path d="M12 2v3"></path>
-                    </svg>
-                </div>
+               <div class="login-logo">
+    <img src="{{ asset('images/logo-tks-new.png') }}" alt="Logo TKS">
+</div>
             </div>
 
-            <!-- Login Card -->
             <div class="glass-card">
                 <span class="eyebrow">Portal Guru</span>
-                <h1 class="login-title">Tes Olahraga Siswa</h1>
+                <h1 class="login-title">TKS<br>Tes Kebugaran Siswa</h1>
                 <p class="login-subtitle">Masuk untuk mengelola kelas dan sesi tes</p>
 
                 @if ($errors->any())
@@ -331,6 +360,7 @@
             <p class="footer-text">
                 Akun guru dibuat oleh administrator sistem
             </p>
+            <p class="footer-credit">BY <span>IQI_PJOK</span></p>
         </div>
     </div>
 

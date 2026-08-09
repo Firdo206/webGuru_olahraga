@@ -1,14 +1,18 @@
 <?php
 
-use App\Http\Controllers\Api\Mobile\AdminAuthController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthSiswaController;
+use App\Http\Controllers\Api\SesiTesController;
+use App\Http\Controllers\Api\HasilTesController;
 
-Route::prefix('mobile/admin')->group(function () {
-    Route::post('/login', [AdminAuthController::class, 'login']);
+Route::post('/siswa/login', [AuthSiswaController::class, 'login']);
 
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/logout', [AdminAuthController::class, 'logout']);
-    });
+Route::middleware('auth:sanctum')->prefix('siswa')->group(function () {
+    Route::post('/logout', [AuthSiswaController::class, 'logout']);
+    Route::get('/me', [AuthSiswaController::class, 'me']);
+
+    Route::get('/sesi-tes', [SesiTesController::class, 'index']);
+    Route::get('/sesi-tes/{sesiTes}', [SesiTesController::class, 'show']);
+    Route::post('/sesi-tes/{sesiTes}/hasil', [HasilTesController::class, 'store']);
+    Route::get('/riwayat-tes', [HasilTesController::class, 'riwayat']);
 });
-
-// nanti nyusul: Route::prefix('mobile/siswa') buat AuthController siswa

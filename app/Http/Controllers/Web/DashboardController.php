@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Kelas;
+use App\Models\SesiTes;
 use App\Models\Siswa;
 
 class DashboardController extends Controller
@@ -20,6 +21,11 @@ class DashboardController extends Controller
             $query->where('guru_id', $guruId);
         })->count();
 
-        return view('dashboard', compact('totalKelas', 'totalSiswa'));
+        // Hitung sesi tes milik guru login yang statusnya sudah selesai
+        $tesTerlaksana = SesiTes::where('guru_id', $guruId)
+            ->where('status', 'selesai')
+            ->count();
+
+        return view('dashboard', compact('totalKelas', 'totalSiswa', 'tesTerlaksana'));
     }
 }

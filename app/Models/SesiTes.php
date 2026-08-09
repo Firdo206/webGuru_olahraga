@@ -22,6 +22,10 @@ class SesiTes extends Model
         'status',
     ];
 
+    protected $casts = [
+        'tanggal' => 'date',
+    ];
+
     public function guru()
     {
         return $this->belongsTo(User::class, 'guru_id');

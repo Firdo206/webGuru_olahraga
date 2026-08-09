@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use Illuminate\Http\Request;
+use App\Imports\SiswaImport;
+use App\Exports\TemplateSiswaExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SiswaController extends Controller
 {
@@ -94,4 +97,41 @@ class SiswaController extends Controller
     {
         abort_if($siswa->kelas->guru_id !== auth()->id(), 403);
     }
+   public function import(Request $request)
+{
+    $request->validate([
+        'kelas_id' => 'required|exists:kelas,id',
+        'file' => 'required|mimes:xlsx,xls,csv|max:2048',
+    ]);
+
+    $kelas = Kelas::where('id', $request->kelas_id)
+        ->where('guru_id', auth()->id())
+        ->firstOrFail();
+
+    $import = new SiswaImport($kelas->id);
+    Excel::import($import, $request->file('file'));
+
+    $skipped = $import->skipped;
+    $importedCount = $import->importedCount;
+    $totalGagal = count($skipped);
+
+    if ($importedCount > 0 && $totalGagal > 0) {
+        $pesan = "{$importedCount} siswa berhasil ditambahkan, {$totalGagal} baris dilewati. Lihat detail di bawah.";
+    } elseif ($importedCount > 0) {
+        $pesan = "Import berhasil, {$importedCount} siswa ditambahkan.";
+    } elseif ($totalGagal > 0) {
+        $pesan = "Tidak ada siswa yang ditambahkan. {$totalGagal} baris dilewati. Lihat detail di bawah.";
+    } else {
+        $pesan = 'File berhasil diproses, tapi tidak ada data yang ditemukan.';
+    }
+
+    return redirect()->route('siswa.index', ['kelas_id' => $kelas->id])
+        ->with($importedCount > 0 && $totalGagal === 0 ? 'success' : 'warning', $pesan)
+        ->with('import_skipped', $skipped);
+}
+
+public function downloadTemplate()
+{
+    return Excel::download(new TemplateSiswaExport, 'template_import_siswa.xlsx');
+}
 }

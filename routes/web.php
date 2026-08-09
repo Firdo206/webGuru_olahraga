@@ -14,54 +14,49 @@ use App\Http\Controllers\Web\Admin\GuruController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('login'));
-
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 });
-
 Route::middleware('auth:web')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
     // Kelas
     Route::resource('kelas', KelasController::class)
         ->parameters(['kelas' => 'kela']);
-
     // Siswa (data master, lintas kelas)
-    Route::resource('siswa', SiswaController::class)
-        ->only(['index', 'store', 'update', 'destroy']);
+   // Siswa (data master, lintas kelas)
+Route::resource('siswa', SiswaController::class)
+    ->only(['index', 'store', 'update', 'destroy']);
 
+Route::post('/siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
+Route::get('/siswa/template', [SiswaController::class, 'downloadTemplate'])->name('siswa.template');
     // Jenis Olahraga (data master)
     Route::resource('jenis-olahraga', JenisOlahragaController::class)
         ->only(['index', 'store', 'update', 'destroy']);
-
     // Jenis Kelamin (read-only)
     Route::get('/jenis-kelamin', [JenisKelaminController::class, 'index'])->name('jenis-kelamin.index');
-
     // Akun & Password Siswa
     Route::prefix('akun-siswa')->name('akun-siswa.')->group(function () {
         Route::get('/', [AkunSiswaController::class, 'index'])->name('index');
         Route::post('/', [AkunSiswaController::class, 'store'])->name('store');
         Route::put('/{akunSiswa}', [AkunSiswaController::class, 'update'])->name('update');
+        Route::post('/bulk-create', [AkunSiswaController::class, 'storeBulk'])->name('bulk-create');
+        Route::get('/export', [AkunSiswaController::class, 'export'])->name('export');
     });
-
     // Standar Nilai
     Route::resource('standar-nilai', StandarNilaiController::class)
         ->only(['index', 'store', 'destroy']);
-
     // Sesi Tes
     Route::resource('sesi-tes', SesiTesController::class)
         ->parameters(['sesi-tes' => 'sesiTes'])
         ->only(['index', 'store', 'destroy']);
     Route::patch('/sesi-tes/{sesiTes}/status', [SesiTesController::class, 'updateStatus'])->name('sesi-tes.update-status');
-
+    Route::get('/sesi-tes/cek-standar', [SesiTesController::class, 'cekStandar'])->name('sesi-tes.cek-standar');
     // Hasil Tes (riwayat)
     Route::get('/hasil-tes', [HasilTesController::class, 'index'])->name('hasil-tes.index');
     Route::get('/hasil-tes/{sesiTes}', [HasilTesController::class, 'show'])->name('hasil-tes.show');
     Route::get('/hasil-tes/{sesiTes}/export', [HasilTesController::class, 'export'])->name('hasil-tes.export');
-  
-  
     Route::middleware('role:superadmin')
     ->prefix('admin')
     ->name('admin.')

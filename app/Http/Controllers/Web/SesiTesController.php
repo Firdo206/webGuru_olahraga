@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\JenisOlahraga;
 use App\Models\SesiTes;
+use App\Models\StandarNilai;
 use Illuminate\Http\Request;
 
 class SesiTesController extends Controller
@@ -13,7 +14,7 @@ class SesiTesController extends Controller
     public function index(Request $request)
     {
         $kelas = Kelas::where('guru_id', auth()->id())->get();
-        $olahragas = JenisOlahraga::all();
+        $olahragas = JenisOlahraga::where('guru_id', auth()->id())->get();
 
         $sesiQuery = SesiTes::where('guru_id', auth()->id())
             ->with(['kelas', 'jenisOlahraga']);
@@ -28,7 +29,37 @@ class SesiTesController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        // Sinkronkan status tiap sesi sesuai waktu sekarang, sebelum ditampilkan
+        // Sekaligus tempel peringatan kalau standar nilai kelas itu belum lengkap
+        $sesiTes->getCollection()->each(function (SesiTes $s) {
+            $s->syncStatusWaktu();
+            $s->peringatan_standar = StandarNilai::cekKelengkapan(auth()->id(), $s->kelas_id, $s->jenis_olahraga_id);
+        });
+
         return view('sesi-tes.index', compact('sesiTes', 'kelas', 'olahragas'));
+    }
+
+    public function cekStandar(Request $request)
+    {
+        $request->validate([
+            'kelas_id'          => 'required|exists:kelas,id',
+            'jenis_olahraga_id' => 'required|exists:jenis_olahraga,id',
+        ]);
+
+        $kelas = Kelas::where('id', $request->kelas_id)
+            ->where('guru_id', auth()->id())
+            ->first();
+
+        if (!$kelas) {
+            return response()->json(['lengkap' => true]);
+        }
+
+        $peringatan = StandarNilai::cekKelengkapan(auth()->id(), $kelas->id, $request->jenis_olahraga_id);
+
+        return response()->json([
+            'lengkap' => $peringatan === null,
+            'pesan'   => $peringatan,
+        ]);
     }
 
     public function store(Request $request)
@@ -55,6 +86,13 @@ class SesiTesController extends Controller
             'waktu_berakhir'    => $data['waktu_berakhir'],
             'status'            => 'belum_mulai',
         ]);
+
+        $peringatan = StandarNilai::cekKelengkapan(auth()->id(), $kelas->id, $data['jenis_olahraga_id']);
+
+        if ($peringatan) {
+            return redirect()->route('sesi-tes.index')
+                ->with('warning', "Sesi tes berhasil dibuat, tapi: {$peringatan}");
+        }
 
         return redirect()->route('sesi-tes.index')
             ->with('success', 'Sesi tes berhasil dibuat.');

@@ -3,6 +3,23 @@
 @section('title', 'Hasil Tes')
 
 @section('content')
+    <style>
+        .ht-table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .ht-table-wrap table {
+            min-width: 700px;
+        }
+
+        @media (max-width: 640px) {
+            .page-header h2 {
+                font-size: 22px !important;
+            }
+        }
+    </style>
+
     <!-- Page Header -->
     <div class="page-header" style="margin-bottom: 24px;">
         <span style="text-transform: uppercase; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; color: var(--accent-green); display: block; margin-bottom: 4px;">Kegiatan</span>
@@ -17,7 +34,7 @@
 
     <!-- FILTER KELAS -->
     <div style="background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 16px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-        <form method="GET" action="{{ route('hasil-tes.index') }}" id="filterForm" style="display: flex; align-items: center; gap: 12px; margin: 0;">
+        <form method="GET" action="{{ route('hasil-tes.index') }}" id="filterForm" style="display: flex; align-items: center; gap: 12px; margin: 0; flex-wrap: wrap;">
             <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Filter Kelas:</label>
             <select name="kelas_id" onchange="document.getElementById('filterForm').submit()" style="background: #161f33; border: 1px solid var(--glass-border); border-radius: 10px; padding: 10px 16px; color: var(--text-main); font-size: 14px; outline: none; min-width: 200px; cursor: pointer;">
                 <option value="">-- Semua Kelas --</option>
@@ -33,6 +50,7 @@
 
     <!-- Table -->
     <div style="background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);">
+        <div class="ht-table-wrap">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
                 <tr style="background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid var(--glass-border);">
@@ -67,7 +85,7 @@
                         </td>
                         <td style="padding: 18px 24px; color: var(--text-main);">{{ $s->hasil_tes_count }} siswa</td>
                         <td style="padding: 18px 24px; text-align: right;">
-                            <a href="{{ route('hasil-tes.show', $s->id) }}" style="color: #6ee7b7; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none;">Lihat Detail</a>
+                            <a href="{{ route('hasil-tes.show', $s->id) }}" style="color: #6ee7b7; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap;">Lihat Detail</a>
                         </td>
                     </tr>
                 @empty
@@ -77,9 +95,10 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
 
         @if ($sesiList->hasPages())
-            <div style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--glass-border); background: rgba(0, 0, 0, 0.1);">
+            <div style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-top: 1px solid var(--glass-border); background: rgba(0, 0, 0, 0.1);">
                 <div style="font-size: 13px; color: var(--text-muted);">Halaman {{ $sesiList->currentPage() }} dari {{ $sesiList->lastPage() }}</div>
                 <div style="display: flex; gap: 8px;">
                     @if ($sesiList->onFirstPage())

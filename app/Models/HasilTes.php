@@ -35,6 +35,7 @@ class HasilTes extends Model
     public static function simpanHasil(SesiTes $sesiTes, Siswa $siswa, float $nilaiHasil): self
     {
         $grade = StandarNilai::hitungGrade(
+            $sesiTes->guru_id,
             $sesiTes->jenis_olahraga_id,
             $siswa->jenis_kelamin,
             $nilaiHasil

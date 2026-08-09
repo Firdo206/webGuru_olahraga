@@ -8,5 +8,10 @@ class JenisOlahraga extends Model
 {
     protected $table = 'jenis_olahraga';
 
-    protected $fillable = ['nama_olahraga', 'tipe', 'protokol_tes', 'deskripsi'];
+    protected $fillable = ['guru_id', 'nama_olahraga', 'tipe', 'protokol_tes', 'durasi_detik', 'deskripsi'];
+
+    public function guru()
+    {
+        return $this->belongsTo(User::class, 'guru_id');
+    }
 }

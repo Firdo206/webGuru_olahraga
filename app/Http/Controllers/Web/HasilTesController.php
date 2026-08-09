@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Exports\HasilTesExport;
 use App\Http\Controllers\Controller;
 use App\Models\HasilTes;
 use App\Models\Kelas;
 use App\Models\SesiTes;
+use App\Models\Siswa;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class HasilTesController extends Controller
 {
@@ -15,7 +18,7 @@ class HasilTesController extends Controller
      */
     public function index(Request $request)
     {
-        SesiTes::syncSemuaStatus(); // auto-update status sesi berdasarkan waktu
+        SesiTes::syncSemuaStatus();
 
         $kelas = Kelas::where('guru_id', auth()->id())->get();
 
@@ -37,32 +40,57 @@ class HasilTesController extends Controller
     }
 
     /**
-     * Detail hasil tes untuk satu sesi tertentu, bisa dicari per nama siswa.
+     * Detail hasil tes untuk satu sesi, dipaginate 10 siswa per halaman.
+     * Menampilkan SEMUA siswa di kelas (bukan cuma yang sudah kirim hasil).
      */
     public function show(Request $request, SesiTes $sesiTes)
     {
         abort_if($sesiTes->guru_id !== auth()->id(), 403);
 
-        $sesiTes->syncStatusWaktu(); // pastikan status sesi ini juga up-to-date
+        $sesiTes->syncStatusWaktu();
+        $sesiTes->load(['kelas', 'jenisOlahraga']);
+
+        $siswaQuery = Siswa::where('kelas_id', $sesiTes->kelas_id);
+
+        if ($request->filled('search')) {
+            $siswaQuery->where('nama', 'like', '%' . $request->search . '%');
+        }
+
+        // Total siswa (sesuai filter search) dihitung sebelum paginate,
+        // supaya ringkasan "X dari Y siswa" tetap benar walau lagi di halaman 2/3/dst.
+        $totalSiswaKelas = (clone $siswaQuery)->count();
+
+        $siswaList = $siswaQuery
+            ->orderByRaw('CAST(nomor_absen AS UNSIGNED) ASC')
+            ->paginate(10)
+            ->withQueryString();
+
+        // Hasil tes yang sudah masuk untuk sesi ini (semua, tidak dipaginate,
+        // supaya hitungan "sudah tes" akurat untuk seluruh kelas).
+        $hasilMap = HasilTes::where('sesi_tes_id', $sesiTes->id)
+            ->get()
+            ->keyBy('siswa_id');
+
+        $sudahTes = $hasilMap->count();
+
+        return view('hasil-tes.show', compact('sesiTes', 'siswaList', 'hasilMap', 'totalSiswaKelas', 'sudahTes'));
+    }
+
+    /**
+     * Download hasil tes satu sesi sebagai file Excel (.xlsx).
+     */
+    public function export(SesiTes $sesiTes)
+    {
+        abort_if($sesiTes->guru_id !== auth()->id(), 403);
 
         $sesiTes->load(['kelas', 'jenisOlahraga']);
 
-        $hasilQuery = HasilTes::where('sesi_tes_id', $sesiTes->id)
-            ->with('siswa');
+        $namaOlahraga = str_replace(' ', '-', $sesiTes->jenisOlahraga->nama_olahraga ?? 'Tes');
+        $namaKelas = str_replace(' ', '-', $sesiTes->kelas->nama_kelas ?? 'Kelas');
+        $tanggal = \Carbon\Carbon::parse($sesiTes->tanggal)->format('d-m-Y');
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $hasilQuery->whereHas('siswa', function ($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%");
-            });
-        }
+        $namaFile = "Hasil-Tes-{$namaOlahraga}-{$namaKelas}-{$tanggal}.xlsx";
 
-        $hasil = $hasilQuery
-            ->join('siswas', 'hasil_tes.siswa_id', '=', 'siswas.id')
-            ->orderByRaw('CAST(siswas.nomor_absen AS UNSIGNED) ASC')
-            ->select('hasil_tes.*')
-            ->get();
-
-        return view('hasil-tes.show', compact('sesiTes', 'hasil'));
+        return Excel::download(new HasilTesExport($sesiTes), $namaFile);
     }
 }
