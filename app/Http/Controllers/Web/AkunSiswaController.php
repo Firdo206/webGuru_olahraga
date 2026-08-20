@@ -31,9 +31,19 @@ class AkunSiswaController extends Controller
             $query->where('nama', 'like', '%' . $request->search . '%');
         }
 
-        $siswa = $query->get();
+        $siswa = $query
+            ->orderByRaw('CAST(nomor_absen AS UNSIGNED) ASC')
+            ->paginate(10)
+            ->withQueryString();
 
-        return view('akun-siswa.index', compact('siswa', 'kelas'));
+        // Daftar siswa yang belum punya akun, dipakai buat dropdown di modal
+        // "Buat Akun Siswa" — sengaja TIDAK dipaginate, biar semua kelihatan.
+        $siswaTanpaAkun = Siswa::whereIn('kelas_id', $kelas->pluck('id'))
+            ->whereDoesntHave('akun')
+            ->orderByRaw('CAST(nomor_absen AS UNSIGNED) ASC')
+            ->get();
+
+        return view('akun-siswa.index', compact('siswa', 'kelas', 'siswaTanpaAkun'));
     }
 
     public function store(Request $request)
@@ -85,7 +95,7 @@ class AkunSiswaController extends Controller
 
         foreach ($siswaTanpaAkun as $siswa) {
             $username = $this->generateUsername($siswa);
-            $password = (string) random_int(100000, 999999); // password 6 digit angka, gampang diketik
+            $password = (string) random_int(100000, 999999);
 
             AkunSiswa::create([
                 'siswa_id'       => $siswa->id,

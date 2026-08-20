@@ -8,6 +8,7 @@ use App\Models\HasilTes;
 use App\Models\Kelas;
 use App\Models\SesiTes;
 use App\Models\Siswa;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -56,8 +57,6 @@ class HasilTesController extends Controller
             $siswaQuery->where('nama', 'like', '%' . $request->search . '%');
         }
 
-        // Total siswa (sesuai filter search) dihitung sebelum paginate,
-        // supaya ringkasan "X dari Y siswa" tetap benar walau lagi di halaman 2/3/dst.
         $totalSiswaKelas = (clone $siswaQuery)->count();
 
         $siswaList = $siswaQuery
@@ -65,8 +64,6 @@ class HasilTesController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        // Hasil tes yang sudah masuk untuk sesi ini (semua, tidak dipaginate,
-        // supaya hitungan "sudah tes" akurat untuk seluruh kelas).
         $hasilMap = HasilTes::where('sesi_tes_id', $sesiTes->id)
             ->get()
             ->keyBy('siswa_id');
@@ -85,12 +82,41 @@ class HasilTesController extends Controller
 
         $sesiTes->load(['kelas', 'jenisOlahraga']);
 
+        $namaFile = $this->buatNamaFile($sesiTes, 'xlsx');
+
+        return Excel::download(new HasilTesExport($sesiTes), $namaFile);
+    }
+
+    /**
+     * Download hasil tes satu sesi sebagai file PDF.
+     */
+    public function exportPdf(SesiTes $sesiTes)
+    {
+        abort_if($sesiTes->guru_id !== auth()->id(), 403);
+
+        $sesiTes->load(['kelas', 'jenisOlahraga']);
+
+        // Ambil SEMUA siswa di kelas (tidak dipaginate, ini dokumen cetak)
+        $siswaList = Siswa::where('kelas_id', $sesiTes->kelas_id)
+            ->orderByRaw('CAST(nomor_absen AS UNSIGNED) ASC')
+            ->get();
+
+        $hasilMap = HasilTes::where('sesi_tes_id', $sesiTes->id)
+            ->get()
+            ->keyBy('siswa_id');
+
+        $pdf = Pdf::loadView('hasil-tes.pdf', compact('sesiTes', 'siswaList', 'hasilMap'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download($this->buatNamaFile($sesiTes, 'pdf'));
+    }
+
+    private function buatNamaFile(SesiTes $sesiTes, string $ekstensi): string
+    {
         $namaOlahraga = str_replace(' ', '-', $sesiTes->jenisOlahraga->nama_olahraga ?? 'Tes');
         $namaKelas = str_replace(' ', '-', $sesiTes->kelas->nama_kelas ?? 'Kelas');
         $tanggal = \Carbon\Carbon::parse($sesiTes->tanggal)->format('d-m-Y');
 
-        $namaFile = "Hasil-Tes-{$namaOlahraga}-{$namaKelas}-{$tanggal}.xlsx";
-
-        return Excel::download(new HasilTesExport($sesiTes), $namaFile);
+        return "Hasil-Tes-{$namaOlahraga}-{$namaKelas}-{$tanggal}.{$ekstensi}";
     }
 }

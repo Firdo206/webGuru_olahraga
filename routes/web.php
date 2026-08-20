@@ -31,6 +31,8 @@ Route::resource('siswa', SiswaController::class)
 
 Route::post('/siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
 Route::get('/siswa/template', [SiswaController::class, 'downloadTemplate'])->name('siswa.template');
+Route::post('/siswa/bulk-destroy', [SiswaController::class, 'bulkDestroy'])->name('siswa.bulk-destroy');
+Route::post('/siswa/destroy-all', [SiswaController::class, 'destroyAll'])->name('siswa.destroy-all');
     // Jenis Olahraga (data master)
     Route::resource('jenis-olahraga', JenisOlahragaController::class)
         ->only(['index', 'store', 'update', 'destroy']);
@@ -57,6 +59,7 @@ Route::get('/siswa/template', [SiswaController::class, 'downloadTemplate'])->nam
     Route::get('/hasil-tes', [HasilTesController::class, 'index'])->name('hasil-tes.index');
     Route::get('/hasil-tes/{sesiTes}', [HasilTesController::class, 'show'])->name('hasil-tes.show');
     Route::get('/hasil-tes/{sesiTes}/export', [HasilTesController::class, 'export'])->name('hasil-tes.export');
+Route::get('/hasil-tes/{sesiTes}/export-pdf', [HasilTesController::class, 'exportPdf'])->name('hasil-tes.export-pdf');
     Route::middleware('role:superadmin')
     ->prefix('admin')
     ->name('admin.')
