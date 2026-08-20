@@ -26,8 +26,9 @@ Route::middleware('auth:web')->group(function () {
         ->parameters(['kelas' => 'kela']);
     // Siswa (data master, lintas kelas)
    // Siswa (data master, lintas kelas)
-Route::resource('siswa', SiswaController::class)
-    ->only(['index', 'store', 'update', 'destroy']);
+Route::resource('siswa', SiswaController::class) ->only(['index', 'store', 'update', 'destroy']);
+    Route::post('/siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
+Route::get('/siswa/template', [SiswaController::class, 'downloadTemplate'])->name('siswa.template');
 
 Route::post('/siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
 Route::get('/siswa/template', [SiswaController::class, 'downloadTemplate'])->name('siswa.template');

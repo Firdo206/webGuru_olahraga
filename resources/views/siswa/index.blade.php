@@ -9,18 +9,40 @@
             <span style="text-transform: uppercase; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; color: var(--accent-green); display: block; margin-bottom: 4px;">Data Master</span>
             <h2 style="font-size: 28px; font-weight: 800; margin: 0; letter-spacing: -0.5px;">Kelola Siswa</h2>
         </div>
-        <button onclick="openModal('create')" style="background: var(--accent-green); color: #090d16; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            <span>+ Tambah Siswa</span>
-        </button>
+       <div style="display: flex; gap: 10px;">
+    <button onclick="openImportModal()" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); color: var(--text-main); padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer;">
+        📥 Import Excel
+    </button>
+    <button onclick="openModal('create')" style="background: var(--accent-green); color: #090d16; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <span>+ Tambah Siswa</span>
+    </button>
+</div>
     </div>
 
     <!-- Alert Success -->
     @if (session('success'))
-        <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; padding: 14px 20px; border-radius: 14px; font-size: 14px; margin-bottom: 24px;">
-            {{ session('success') }}
-        </div>
-    @endif
+    <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; padding: 14px 20px; border-radius: 14px; font-size: 14px; margin-bottom: 24px;">
+        {{ session('success') }}
+    </div>
+@endif
+
+@if (session('warning'))
+    <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; padding: 14px 20px; border-radius: 14px; font-size: 14px; margin-bottom: 12px;">
+        {{ session('warning') }}
+    </div>
+@endif
+
+@if (session('import_skipped') && count(session('import_skipped')) > 0)
+    <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px 20px; margin-bottom: 24px; font-size: 13px;">
+        <strong style="color: var(--text-main); display:block; margin-bottom: 8px;">Detail baris yang dilewati:</strong>
+        <ul style="margin: 0; padding-left: 18px; color: var(--text-muted);">
+            @foreach (session('import_skipped') as $msg)
+                <li>{{ $msg }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 
     <!-- BAR FILTER KELAS -->
     <div style="background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 16px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
@@ -208,6 +230,45 @@
         </div>
     </div>
 
+    <!-- POPUP MODAL IMPORT EXCEL -->
+    <div id="importModal" style="display: none; position: fixed; inset: 0; z-index: 999; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(6px); align-items: center; justify-content: center;">
+        <div style="background: #0d1322; border: 1px solid var(--glass-border); border-radius: 20px; width: 100%; max-width: 480px; padding: 28px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: var(--text-main);">Import Siswa dari Excel</h3>
+                <button type="button" onclick="closeImportModal()" style="background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer;">&times;</button>
+            </div>
+
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                File harus punya kolom: <strong>nomor_absen</strong>, <strong>nama</strong>, <strong>jenis_kelamin</strong>.
+                <a href="{{ route('siswa.template') }}" style="color: var(--accent-green);">Download template →</a>
+            </p>
+
+            <form method="POST" action="{{ route('siswa.import') }}" enctype="multipart/form-data">
+                @csrf
+
+                <div style="margin-bottom: 18px;">
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">KELAS TUJUAN</label>
+                    <select name="kelas_id" required style="width: 100%; background: #161f33; border: 1px solid var(--glass-border); border-radius: 10px; padding: 12px 16px; color: var(--text-main); font-size: 14px; outline: none; box-sizing: border-box;">
+                        <option value="" disabled selected>-- Pilih Kelas --</option>
+                        @foreach ($kelas as $k)
+                            <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">FILE EXCEL</label>
+                    <input type="file" name="file" accept=".xlsx,.xls,.csv" required style="width: 100%; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); border-radius: 10px; padding: 12px 16px; color: var(--text-main); font-size: 13px; outline: none; box-sizing: border-box;">
+                </div>
+
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" onclick="closeImportModal()" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); color: var(--text-muted); padding: 10px 18px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer;">Batal</button>
+                    <button type="submit" style="background: var(--accent-green); border: none; color: #090d16; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer;">Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- SCRIPT POPUP MODAL -->
     <script>
         (function () {
@@ -219,6 +280,7 @@
             const jenisKelaminInput = document.getElementById('jenis_kelamin');
             const nomorAbsenInput = document.getElementById('nomor_absen');
             const kelasSelect = document.getElementById('kelas_id');
+            const importModal = document.getElementById('importModal');
 
             window.openModal = function (mode) {
                 modal.style.display = 'flex';
@@ -248,9 +310,20 @@
                 modal.style.display = 'none';
             };
 
+            window.openImportModal = function () {
+                importModal.style.display = 'flex';
+            };
+
+            window.closeImportModal = function () {
+                importModal.style.display = 'none';
+            };
+
             window.addEventListener('click', function (event) {
                 if (event.target === modal) {
                     closeModal();
+                }
+                if (event.target === importModal) {
+                    closeImportModal();
                 }
             });
         })();
