@@ -19,7 +19,7 @@
             }
 
             .page-header a[href*="export"] {
-                width: 100%;
+                flex: 1;
                 justify-content: center;
             }
         }
@@ -46,13 +46,15 @@
             </p>
         </div>
 
-        <a href="{{ route('hasil-tes.export', $sesiTes->id) }}" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--accent-green); color: #090d16; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 14px; text-decoration: none;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            <span>Download Excel</span>
-        </a>
-        <a href="{{ route('hasil-tes.export-pdf', $sesiTes->id) }}" style="color: #f87171; background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none;">
-    Download PDF
-</a>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <a href="{{ route('hasil-tes.export', $sesiTes->id) }}" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--accent-green); color: #090d16; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 14px; text-decoration: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Download Excel</span>
+            </a>
+            <a href="{{ route('hasil-tes.export-pdf', $sesiTes->id) }}" style="color: #f87171; background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none;">
+                Download PDF
+            </a>
+        </div>
     </div>
 
     <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 14px; padding: 12px 20px; margin-bottom: 20px; font-size: 13px; color: var(--text-muted);">
